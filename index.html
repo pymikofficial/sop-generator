@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP Generator | cosmik.work</title>
+<meta name="description" content="Ramble through a process, get a numbered SOP back. Optionally ground it against your team's real SOP for house style, without leaking its content.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0a0a0f;
+  --card:#151426;
+  --card-2:#0a0a15;
+  --text:#f5f5f7;
+  --text-2:#a1a1aa;
+  --accent:#7c5cff;
+  --accent-bright:#a78bfa;
+  --line:rgba(167,139,250,.16);
+  --ok:#5cd6a3;
+  --warn:#f6c177;
+  --rec:#ff6b8a;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:var(--ink);
+  color:var(--text);
+  font-family:'Inter Tight',sans-serif;
+  line-height:1.6;
+  min-height:100vh;
+  background-image:
+    radial-gradient(1px 1px at 14% 20%, rgba(245,245,247,.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 80% 14%, rgba(245,245,247,.25) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 62% 70%, rgba(167,139,250,.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 28% 84%, rgba(245,245,247,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 92% 48%, rgba(245,245,247,.2) 50%, transparent 51%);
+}
+main{max-width:860px;margin:0 auto;padding:56px 24px 96px;}
+
+.eyebrow{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent-bright);margin-bottom:14px;
+}
+h1{
+  font-family:'Fraunces',serif;
+  font-size:clamp(2.2rem,5.5vw,3.4rem);
+  font-weight:500;letter-spacing:-.02em;line-height:1.1;
+}
+h1 em{font-style:italic;color:var(--accent-bright);}
+.sub{color:var(--text-2);max-width:58ch;margin-top:16px;font-size:1.02rem;}
+
+.field-block{margin-top:36px;}
+.field-label{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:10px;flex-wrap:wrap;
+}
+.field-label-text{font-size:.92rem;font-weight:500;color:var(--text);}
+.field-label-optional{
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text-2);border:1px solid var(--line);
+  border-radius:999px;padding:2px 10px;
+}
+textarea{
+  width:100%;resize:vertical;
+  background:linear-gradient(180deg,var(--card) 0%,var(--card-2) 100%);
+  border:1px solid var(--line);border-radius:18px;
+  color:var(--text);font-family:'Inter Tight',sans-serif;font-size:.98rem;line-height:1.6;
+  padding:20px;outline:none;
+  transition:border-color .3s var(--ease);
+}
+#raw{min-height:220px;}
+#reference{min-height:130px;}
+textarea:focus{border-color:rgba(167,139,250,.5);}
+textarea::placeholder{color:#55555f;}
+textarea.recording{border-color:rgba(255,107,138,.55);}
+
+.input-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  margin-top:20px;flex-wrap:wrap;
+}
+.privacy-note{font-size:.82rem;color:var(--text-2);max-width:42ch;}
+.privacy-note strong{color:var(--accent-bright);font-weight:500;}
+.btn-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+button.mic{
+  font-family:'Inter Tight',sans-serif;font-size:.9rem;font-weight:500;
+  background:transparent;color:var(--accent-bright);
+  border:1px solid rgba(167,139,250,.4);border-radius:999px;
+  padding:12px 22px;cursor:pointer;display:flex;align-items:center;gap:8px;
+  transition:border-color .3s var(--ease),background .3s var(--ease),color .3s var(--ease);
+}
+button.mic:hover{border-color:var(--accent-bright);background:rgba(124,92,255,.08);}
+button.mic.recording{border-color:var(--rec);color:var(--rec);}
+button.mic.recording .mic-dot{background:var(--rec);animation:pulse 1.2s ease-in-out infinite;}
+.mic-dot{width:8px;height:8px;border-radius:50%;background:var(--accent-bright);flex-shrink:0;}
+button.mic:disabled{opacity:.4;cursor:not-allowed;}
+button.generate{
+  font-family:'Inter Tight',sans-serif;font-size:.95rem;font-weight:500;
+  background:var(--accent);color:#fff;border:none;border-radius:999px;
+  padding:13px 30px;cursor:pointer;white-space:nowrap;
+  transition:background .3s var(--ease),transform .3s var(--ease);
+}
+button.generate:hover{background:#6a4be0;transform:translateY(-1px);}
+button.generate:disabled{background:#3a3550;cursor:not-allowed;transform:none;}
+
+.status{
+  margin-top:28px;font-family:'JetBrains Mono',monospace;font-size:.82rem;
+  color:var(--text-2);display:none;align-items:center;gap:10px;
+}
+.status.visible{display:flex;}
+.pulse{
+  width:8px;height:8px;border-radius:50%;background:var(--accent-bright);
+  animation:pulse 1.4s ease-in-out infinite;flex-shrink:0;
+}
+@keyframes pulse{0%,100%{opacity:.3;}50%{opacity:1;}}
+@media(prefers-reduced-motion:reduce){.pulse,.mic-dot{animation:none !important;opacity:1;}}
+.status.error{color:#ff8a8a;}
+.status.error .pulse{background:#ff8a8a;animation:none;}
+
+#sop{display:none;margin-top:52px;}
+#sop.visible{display:block;}
+.sop-doc{
+  background:linear-gradient(180deg,var(--card) 0%,var(--card-2) 100%);
+  border:1px solid var(--line);border-radius:24px;overflow:hidden;
+  box-shadow:0 24px 60px -30px rgba(124,92,255,.35);
+}
+.sop-band{
+  padding:26px 32px;border-bottom:1px solid var(--line);
+  background:rgba(124,92,255,.07);
+}
+.sop-band .label{
+  font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent-bright);margin-bottom:8px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.style-badge{
+  font-size:9.5px;border:1px solid rgba(92,214,163,.4);color:var(--ok);
+  border-radius:999px;padding:2px 9px;letter-spacing:.08em;
+}
+.sop-band .s-title{
+  font-family:'Fraunces',serif;font-size:1.5rem;font-weight:500;
+  letter-spacing:-.01em;line-height:1.3;
+}
+.sop-band .s-purpose{color:var(--text-2);font-size:.92rem;margin-top:8px;}
+.sop-section{padding:26px 32px;border-bottom:1px solid var(--line);}
+.sop-section:last-of-type{border-bottom:none;}
+.sop-section h2{
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;font-weight:500;margin-bottom:16px;
+}
+.sop-section.s-steps h2{color:var(--accent-bright);}
+.sop-section.s-tools h2{color:var(--ok);}
+.sop-section.s-exceptions h2{color:var(--warn);}
+.step-item{display:flex;gap:14px;margin-bottom:16px;}
+.step-item:last-child{margin-bottom:0;}
+.step-num{
+  font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--accent-bright);
+  flex-shrink:0;width:24px;
+}
+.step-main{font-weight:500;font-size:1rem;}
+.step-detail{color:var(--text-2);font-size:.88rem;margin-top:2px;}
+.tool-pill{
+  display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.78rem;
+  color:var(--accent-bright);border:1px solid rgba(167,139,250,.3);
+  border-radius:999px;padding:4px 12px;margin:0 8px 8px 0;
+}
+.exception-item{margin-bottom:14px;}
+.exception-item:last-child{margin-bottom:0;}
+.exception-case{font-weight:500;font-size:.95rem;}
+.exception-handling{color:var(--text-2);font-size:.88rem;margin-top:2px;}
+
+.audit-box{
+  margin-top:16px;padding:18px 22px;border-radius:14px;
+  border:1px dashed rgba(167,139,250,.3);
+  font-size:.85rem;color:var(--text-2);
+}
+.audit-box .ab-title{
+  font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--accent-bright);margin-bottom:8px;
+}
+.audit-box p{margin-bottom:4px;}
+.audit-box p:last-child{margin-bottom:0;}
+
+.sop-actions{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;}
+.btn-ghost{
+  font-family:'Inter Tight',sans-serif;font-size:.88rem;font-weight:500;
+  background:transparent;color:var(--accent-bright);
+  border:1px solid rgba(167,139,250,.35);border-radius:999px;
+  padding:10px 22px;cursor:pointer;
+  transition:border-color .3s var(--ease),background .3s var(--ease);
+}
+.btn-ghost:hover{border-color:var(--accent-bright);background:rgba(124,92,255,.08);}
+
+footer{
+  max-width:860px;margin:0 auto;padding:0 24px 48px;
+  font-size:.82rem;color:var(--text-2);
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+footer a{color:var(--accent-bright);text-decoration:none;}
+footer a:hover{text-decoration:underline;}
+
+:focus-visible{outline:2px solid var(--accent-bright);outline-offset:2px;}
+
+@media(max-width:640px){
+  .sop-band,.sop-section{padding:20px 20px;}
+}
+</style>
+</head>
+<body>
+
+<main>
+  <p class="eyebrow">cosmik.work · 07 ~ Business Ops</p>
+  <h1>Ramble through it once.<br>Never write it up <em>again.</em></h1>
+  <p class="sub">Describe a process out loud or in text, however messy. Get back a numbered SOP: purpose, steps in order, tools referenced, and exceptions. Optionally paste a real SOP you already have, and this one will match its structure and tone.</p>
+
+  <div class="field-block">
+    <div class="field-label"><span class="field-label-text">Describe the process</span></div>
+    <label for="raw" style="position:absolute;left:-9999px;">Process description</label>
+    <textarea id="raw" placeholder="Ramble through it, out of order is fine. Example:
+
+Okay so when a candidate no-shows an interview, first you gotta wait 15 minutes past the scheduled time, then send a follow-up email asking to reschedule. If they don't respond in 48 hours, mark them as unresponsive in the tracker. Oh and if it's a second no-show, don't offer a reschedule, just close the candidate out. Also always CC the hiring manager on the follow-up email."></textarea>
+  </div>
+
+  <div class="field-block">
+    <div class="field-label">
+      <span class="field-label-text">Reference SOP (style only, not content)</span>
+      <span class="field-label-optional">Optional</span>
+    </div>
+    <label for="reference" style="position:absolute;left:-9999px;">Reference SOP</label>
+    <textarea id="reference" placeholder="Paste an SOP you already have, from your own team or a template. The new SOP will match its structure, tone, and formatting, none of its actual content will be reused."></textarea>
+  </div>
+
+  <div class="input-foot">
+    <p class="privacy-note"><strong>Privacy guardrail:</strong> emails and phone numbers are stripped from both fields on the server before anything reaches the AI. Nothing you submit is stored beyond the generated SOP.</p>
+    <div class="btn-row">
+      <button class="mic" id="micBtn"><span class="mic-dot"></span><span id="micLabel">Speak the process instead</span></button>
+      <button class="generate" id="go">Generate SOP</button>
+    </div>
+  </div>
+
+  <div class="status" id="status"><span class="pulse"></span><span id="statusText">Working…</span></div>
+
+  <section id="sop" aria-live="polite">
+    <div class="sop-doc">
+      <div class="sop-band">
+        <p class="label" id="sopDate">SOP <span class="style-badge" id="styleBadge" style="display:none;">Style-matched to reference</span></p>
+        <p class="s-title" id="sTitle"></p>
+        <p class="s-purpose" id="sPurpose"></p>
+      </div>
+      <div class="sop-section s-steps">
+        <h2>Steps</h2>
+        <div id="steps"></div>
+      </div>
+      <div class="sop-section s-tools">
+        <h2>Tools &amp; systems</h2>
+        <div id="tools"></div>
+      </div>
+      <div class="sop-section s-exceptions">
+        <h2>Exceptions</h2>
+        <div id="exceptions"></div>
+      </div>
+    </div>
+
+    <div class="audit-box" id="auditBox" style="display:none;">
+      <p class="ab-title">Auditor pass · second AI checked the first one's work</p>
+      <div id="auditFlags"></div>
+    </div>
+
+    <div class="sop-actions">
+      <button class="btn-ghost" id="copyBtn">Copy as text</button>
+      <button class="btn-ghost" id="againBtn">Start over</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>Built by <a href="https://cosmik.work" target="_blank" rel="noopener">Soumik Chatterjee · cosmik.work</a></span>
+  <span><a href="https://github.com/pymikofficial/sop-generator" target="_blank" rel="noopener">Source on GitHub</a></span>
+</footer>
+
+<script>
+(function(){
+  const go = document.getElementById('go');
+  const raw = document.getElementById('raw');
+  const reference = document.getElementById('reference');
+  const statusEl = document.getElementById('status');
+  const statusText = document.getElementById('statusText');
+  const sopEl = document.getElementById('sop');
+  const micBtn = document.getElementById('micBtn');
+  const micLabel = document.getElementById('micLabel');
+
+  const POLL_MS = 2000;
+  const MAX_POLLS = 45;
+
+  let lastText = '';
+
+  // ===== voice input (Web Speech API, same pattern as Fieldnote/Meeting Minutes) =====
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recog = null;
+  let recording = false;
+  let finalSoFar = '';
+
+  if (!SR) {
+    micBtn.disabled = true;
+    micLabel.textContent = 'Voice not supported here';
+  } else {
+    recog = new SR();
+    recog.continuous = true;
+    recog.interimResults = true;
+    recog.lang = 'en-IN';
+
+    recog.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalSoFar += t + ' ';
+        else interim += t;
+      }
+      raw.value = (finalSoFar + interim).trim();
+    };
+    recog.onerror = () => stopRec();
+    recog.onend = () => { if (recording) { try { recog.start(); } catch(e){} } };
+  }
+
+  function startRec(){
+    finalSoFar = raw.value ? raw.value.trim() + ' ' : '';
+    recording = true;
+    micBtn.classList.add('recording');
+    raw.classList.add('recording');
+    micLabel.textContent = 'Listening… tap to stop';
+    try { recog.start(); } catch(e){}
+  }
+  function stopRec(){
+    recording = false;
+    micBtn.classList.remove('recording');
+    raw.classList.remove('recording');
+    micLabel.textContent = 'Speak the process instead';
+    try { recog.stop(); } catch(e){}
+  }
+  micBtn.addEventListener('click', () => {
+    if (!recog) return;
+    recording ? stopRec() : startRec();
+  });
+
+  // ===== generate flow =====
+  go.addEventListener('click', start);
+  document.getElementById('againBtn').addEventListener('click', () => {
+    sopEl.classList.remove('visible');
+    raw.value = '';
+    reference.value = '';
+    raw.focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  document.getElementById('copyBtn').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(lastText);
+      const b = document.getElementById('copyBtn');
+      const t = b.textContent;
+      b.textContent = 'Copied ✓';
+      setTimeout(() => { b.textContent = t; }, 1500);
+    } catch (e) {}
+  });
+
+  async function start(){
+    if (recording) stopRec();
+    const text = raw.value.trim();
+    if (!text) { raw.focus(); return; }
+    const refText = reference.value.trim();
+
+    const jobId = (crypto.randomUUID ? crypto.randomUUID()
+      : 'job-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+
+    go.disabled = true;
+    sopEl.classList.remove('visible');
+    setStatus(refText ? 'Scrubbing and matching your reference style…' : 'Scrubbing and drafting your SOP…', false);
+
+    try {
+      await fetch('/.netlify/functions/generate-sop-background', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId, text, reference: refText })
+      });
+    } catch (e) {
+      return fail('Could not reach the server. Check your connection and try again.');
+    }
+
+    let polls = 0;
+    const timer = setInterval(async () => {
+      polls++;
+      if (polls > MAX_POLLS) {
+        clearInterval(timer);
+        return fail('Timed out. The server may be busy ~ try again in a minute.');
+      }
+      if (polls === 8) setStatus('Auditor is double-checking the draft…', false);
+
+      try {
+        const res = await fetch('/.netlify/functions/check-sop?jobId=' + encodeURIComponent(jobId));
+        const data = await res.json();
+        if (data.status === 'done') {
+          clearInterval(timer);
+          render(data);
+        } else if (data.status === 'error') {
+          clearInterval(timer);
+          fail(data.message || 'Generation failed.');
+        }
+      } catch (e) { /* transient poll failure, keep going */ }
+    }, POLL_MS);
+  }
+
+  function setStatus(msg, isError){
+    statusEl.classList.add('visible');
+    statusEl.classList.toggle('error', !!isError);
+    statusText.textContent = msg;
+  }
+  function fail(msg){
+    setStatus(msg, true);
+    go.disabled = false;
+  }
+
+  function render(data){
+    const s = data.sop || {};
+    statusEl.classList.remove('visible');
+    go.disabled = false;
+
+    document.getElementById('sopDate').childNodes[0].textContent =
+      'SOP · ' + new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }) + ' ';
+    const badge = document.getElementById('styleBadge');
+    badge.style.display = data.styleMatched ? 'inline-block' : 'none';
+
+    document.getElementById('sTitle').textContent = s.title || 'Untitled SOP';
+    document.getElementById('sPurpose').textContent = s.purpose || '';
+
+    const stepsEl = document.getElementById('steps');
+    stepsEl.innerHTML = '';
+    (s.steps || []).forEach((st, i) => {
+      const w = document.createElement('div');
+      w.className = 'step-item';
+      const num = document.createElement('span');
+      num.className = 'step-num';
+      num.textContent = (i + 1) + '.';
+      const body = document.createElement('div');
+      const main = document.createElement('p');
+      main.className = 'step-main';
+      main.textContent = st.step || '';
+      body.appendChild(main);
+      if (st.detail) {
+        const det = document.createElement('p');
+        det.className = 'step-detail';
+        det.textContent = st.detail;
+        body.appendChild(det);
+      }
+      w.appendChild(num);
+      w.appendChild(body);
+      stepsEl.appendChild(w);
+    });
+
+    const toolsEl = document.getElementById('tools');
+    toolsEl.innerHTML = '';
+    (s.tools || []).forEach((t) => {
+      const p = document.createElement('span');
+      p.className = 'tool-pill';
+      p.textContent = t;
+      toolsEl.appendChild(p);
+    });
+    if (!(s.tools || []).length) {
+      const p = document.createElement('p');
+      p.className = 'step-detail';
+      p.textContent = 'None specified.';
+      toolsEl.appendChild(p);
+    }
+
+    const excEl = document.getElementById('exceptions');
+    excEl.innerHTML = '';
+    (s.exceptions || []).forEach((ex) => {
+      const w = document.createElement('div');
+      w.className = 'exception-item';
+      const c = document.createElement('p');
+      c.className = 'exception-case';
+      c.textContent = ex.case || '';
+      const h = document.createElement('p');
+      h.className = 'exception-handling';
+      h.textContent = ex.handling || '';
+      w.appendChild(c);
+      w.appendChild(h);
+      excEl.appendChild(w);
+    });
+    if (!(s.exceptions || []).length) {
+      const p = document.createElement('p');
+      p.className = 'step-detail';
+      p.textContent = 'No edge cases identified.';
+      excEl.appendChild(p);
+    }
+
+    const flags = s.audit_flags || [];
+    const auditBox = document.getElementById('auditBox');
+    const flagsEl = document.getElementById('auditFlags');
+    flagsEl.innerHTML = '';
+    if (flags.length) {
+      flags.forEach((f) => {
+        const p = document.createElement('p');
+        p.textContent = '· ' + f;
+        flagsEl.appendChild(p);
+      });
+    } else {
+      const p = document.createElement('p');
+      p.textContent = 'Draft passed clean ~ nothing significant was missed or invented.';
+      flagsEl.appendChild(p);
+    }
+    auditBox.style.display = 'block';
+
+    lastText = toPlainText(s);
+    sopEl.classList.add('visible');
+    sopEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function toPlainText(s){
+    const lines = ['STANDARD OPERATING PROCEDURE', ''];
+    if (s.title) lines.push(s.title);
+    if (s.purpose) lines.push(s.purpose);
+    lines.push('', 'STEPS');
+    (s.steps || []).forEach((st, i) => lines.push((i+1) + '. ' + st.step + (st.detail ? ' (' + st.detail + ')' : '')));
+    lines.push('', 'TOOLS & SYSTEMS');
+    (s.tools || []).forEach((t) => lines.push('- ' + t));
+    lines.push('', 'EXCEPTIONS');
+    (s.exceptions || []).forEach((ex) => lines.push('- ' + ex.case + ' -> ' + ex.handling));
+    return lines.join('\n');
+  }
+})();
+</script>
+
+</body>
+</html>

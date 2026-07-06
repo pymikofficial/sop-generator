@@ -1,0 +1,9 @@
+{
+  "name": "sop-generator",
+  "version": "1.0.0",
+  "description": "Ramble through a process, get a numbered SOP back, optionally style-matched to a real reference SOP. Built by Soumik Chatterjee / cosmik.work.",
+  "private": true,
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
