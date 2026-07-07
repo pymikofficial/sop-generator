@@ -2,7 +2,7 @@
 
 Ramble through a process, however messy or out of order, and get back a clean, numbered Standard Operating Procedure: purpose, steps, tools referenced, and exceptions. Optionally paste a real SOP you already have, and the new one will match its structure and tone, without reusing any of its actual content.
 
-**Live:** [sop-generator.netlify.app](https://sop-generator.netlify.app)
+**Live:** [cosmik-sop-generator.netlify.app](https://cosmik-sop-generator.netlify.app)
 
 ## The headache
 

@@ -5,7 +5,7 @@
 //
 // Usage: node scripts/smoke-test.mjs [base_url]
 
-const BASE_URL = process.argv[2] || 'https://sop-generator.netlify.app';
+const BASE_URL = process.argv[2] || 'https://cosmik-sop-generator.netlify.app';
 const POLL_MS = 2000;
 const MAX_POLLS = 45;
 
