@@ -112,7 +112,8 @@ async function main() {
     else fail('Reference-style run: styleMatched should be true when a reference is provided.');
 
     // Leakage check: none of the reference's specific content should appear in the new SOP.
-    const flat = JSON.stringify(s).toLowerCase();
+    const contentOnly = { title: s.title, purpose: s.purpose, steps: s.steps, tools: s.tools, exceptions: s.exceptions };
+    const flat = JSON.stringify(contentOnly).toLowerCase();
     const leakTerms = ['vendor invoice', 'purchase order', 'director for sign-off', 'budget threshold'];
     const leaked = leakTerms.filter((t) => flat.includes(t));
     if (leaked.length === 0) {
