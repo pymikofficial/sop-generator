@@ -1,3 +1,6 @@
 node_modules/
 .env
 .netlify/
+
+# Local Claude Code permissions (may embed secrets in allow-listed commands, never public)
+.claude/
