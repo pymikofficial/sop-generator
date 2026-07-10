@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOP Generator | cosmik.work</title>
 <meta name="description" content="Ramble through a process, get a numbered SOP back. Optionally ground it against your team's real SOP for house style, without leaking its content.">
+<link rel="canonical" href="https://cosmik-sop-generator.netlify.app/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOP Generator | cosmik.work">
+<meta property="og:description" content="Ramble through a process, get a numbered SOP back. Optionally ground it against your team's real SOP for house style, without leaking its content.">
+<meta property="og:url" content="https://cosmik-sop-generator.netlify.app/">
+<meta property="og:image" content="https://cosmik.work/img/cosmikwork_broad_logo.webp">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SOP Generator | cosmik.work">
+<meta name="twitter:description" content="Ramble through a process, get a numbered SOP back. Optionally ground it against your team's real SOP for house style, without leaking its content.">
+<meta name="twitter:image" content="https://cosmik.work/img/cosmikwork_broad_logo.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -82,6 +92,9 @@ textarea.recording{border-color:rgba(255,107,138,.55);}
   margin-top:20px;flex-wrap:wrap;
 }
 .privacy-note{font-size:.82rem;color:var(--text-2);max-width:42ch;}
+.char-count{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--text-2);text-align:right;margin-top:6px;}
+.char-count.warn{color:var(--warn);}
+.char-count.over{color:var(--rec);}
 .privacy-note strong{color:var(--accent-bright);font-weight:500;}
 .btn-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
 button.mic{
@@ -202,6 +215,12 @@ footer a{color:var(--accent-bright);text-decoration:none;}
 footer a:hover{text-decoration:underline;}
 
 :focus-visible{outline:2px solid var(--accent-bright);outline-offset:2px;}
+.skip-link{
+  position:absolute;left:-9999px;top:0;z-index:100;
+  background:var(--accent);color:#fff;padding:12px 20px;border-radius:0 0 10px 0;
+  font-family:'JetBrains Mono',monospace;font-size:12px;text-decoration:none;
+}
+.skip-link:focus{left:0;}
 
 @media(max-width:640px){
   .sop-band,.sop-section{padding:20px 20px;}
@@ -210,7 +229,9 @@ footer a:hover{text-decoration:underline;}
 </head>
 <body>
 
-<main>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<main id="main">
   <p class="eyebrow">cosmik.work · 07 ~ Business Ops</p>
   <h1>Ramble through it once.<br>Never write it up <em>again.</em></h1>
   <p class="sub">Describe a process out loud or in text, however messy. Get back a numbered SOP: purpose, steps in order, tools referenced, and exceptions. Optionally paste a real SOP you already have, and this one will match its structure and tone.</p>
@@ -218,9 +239,10 @@ footer a:hover{text-decoration:underline;}
   <div class="field-block">
     <div class="field-label"><span class="field-label-text">Describe the process</span></div>
     <label for="raw" style="position:absolute;left:-9999px;">Process description</label>
-    <textarea id="raw" placeholder="Ramble through it, out of order is fine. Example:
+    <textarea id="raw" maxlength="24000" placeholder="Ramble through it, out of order is fine. Example:
 
 Okay so when a candidate no-shows an interview, first you gotta wait 15 minutes past the scheduled time, then send a follow-up email asking to reschedule. If they don't respond in 48 hours, mark them as unresponsive in the tracker. Oh and if it's a second no-show, don't offer a reschedule, just close the candidate out. Also always CC the hiring manager on the follow-up email."></textarea>
+    <p class="char-count" id="rawCount" aria-live="polite">0 / 24000</p>
   </div>
 
   <div class="field-block">
@@ -229,7 +251,8 @@ Okay so when a candidate no-shows an interview, first you gotta wait 15 minutes 
       <span class="field-label-optional">Optional</span>
     </div>
     <label for="reference" style="position:absolute;left:-9999px;">Reference SOP</label>
-    <textarea id="reference" placeholder="Paste an SOP you already have, from your own team or a template. The new SOP will match its structure, tone, and formatting, none of its actual content will be reused."></textarea>
+    <textarea id="reference" maxlength="16000" placeholder="Paste an SOP you already have, from your own team or a template. The new SOP will match its structure, tone, and formatting, none of its actual content will be reused."></textarea>
+    <p class="char-count" id="referenceCount" aria-live="polite">0 / 16000</p>
   </div>
 
   <div class="input-foot">
@@ -284,6 +307,19 @@ Okay so when a candidate no-shows an interview, first you gotta wait 15 minutes 
   const go = document.getElementById('go');
   const raw = document.getElementById('raw');
   const reference = document.getElementById('reference');
+  const rawCount = document.getElementById('rawCount');
+  const referenceCount = document.getElementById('referenceCount');
+  function updateRawCount(){
+    const n = raw.value.length;
+    rawCount.textContent = n + ' / 24000';
+    rawCount.className = 'char-count' + (n >= 24000 ? ' over' : n >= 21600 ? ' warn' : '');
+  }
+  raw.addEventListener('input', updateRawCount);
+  reference.addEventListener('input', () => {
+    const n = reference.value.length;
+    referenceCount.textContent = n + ' / 16000';
+    referenceCount.className = 'char-count' + (n >= 16000 ? ' over' : n >= 14400 ? ' warn' : '');
+  });
   const statusEl = document.getElementById('status');
   const statusText = document.getElementById('statusText');
   const sopEl = document.getElementById('sop');
@@ -318,6 +354,7 @@ Okay so when a candidate no-shows an interview, first you gotta wait 15 minutes 
         else interim += t;
       }
       raw.value = (finalSoFar + interim).trim();
+      updateRawCount();
     };
     recog.onerror = () => stopRec();
     recog.onend = () => { if (recording) { try { recog.start(); } catch(e){} } };
@@ -359,7 +396,12 @@ Okay so when a candidate no-shows an interview, first you gotta wait 15 minutes 
       const t = b.textContent;
       b.textContent = 'Copied ✓';
       setTimeout(() => { b.textContent = t; }, 1500);
-    } catch (e) {}
+    } catch (e) {
+      const b = document.getElementById('copyBtn');
+      const t = b.textContent;
+      b.textContent = 'Copy failed — select the text manually';
+      setTimeout(() => { b.textContent = t; }, 2500);
+    }
   });
 
   async function start(){
