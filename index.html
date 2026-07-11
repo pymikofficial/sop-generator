@@ -400,7 +400,7 @@ Okay so when a candidate no-shows an interview, first you gotta wait 15 minutes 
     } catch (e) {
       const b = document.getElementById('copyBtn');
       const t = b.textContent;
-      b.textContent = 'Copy failed — select the text manually';
+      b.textContent = 'Copy failed: select the text manually';
       setTimeout(() => { b.textContent = t; }, 2500);
     }
   });
